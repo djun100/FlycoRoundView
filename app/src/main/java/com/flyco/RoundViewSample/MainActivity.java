@@ -7,12 +7,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import com.flyco.roundview.RoundFrameLayout;
 import com.flyco.roundview.RoundTextView;
 import com.flyco.roundview.RoundViewDelegate;
 
 public class MainActivity extends AppCompatActivity {
     private Context context = this;
-
+    private RoundFrameLayout fl;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,12 +25,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        RoundTextView rtv_2 = (RoundTextView) findViewById(R.id.rtv_2);
-        rtv_2.setOnLongClickListener(new View.OnLongClickListener() {
+        final RoundTextView rtv_2 = (RoundTextView) findViewById(R.id.rtv_2);
+        rtv_2.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onLongClick(View v) {
+            public void onClick(View v) {
+                rtv_2.setEnabled(false);
                 Toast.makeText(context, "LongClick--->RoundTextView_2", Toast.LENGTH_SHORT).show();
-                return false;
             }
         });
 
@@ -41,6 +42,13 @@ public class MainActivity extends AppCompatActivity {
                 delegate.setBackgroundColor(
                         delegate.getBackgroundColor() == Color.parseColor("#ffffff")
                                 ? Color.parseColor("#F6CE59") : Color.parseColor("#ffffff"));
+            }
+        });
+        fl= (RoundFrameLayout) findViewById(R.id.fl);
+        fl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
             }
         });
     }

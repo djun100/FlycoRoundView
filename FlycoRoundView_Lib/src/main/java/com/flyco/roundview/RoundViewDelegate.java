@@ -4,27 +4,30 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
-import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
+import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
+
 
 public class RoundViewDelegate {
     private View view;
     private Context context;
     private GradientDrawable gd_background = new GradientDrawable();
     private GradientDrawable gd_background_press = new GradientDrawable();
+    private GradientDrawable gd_background_disable = new GradientDrawable();
     private int backgroundColor;
     private int backgroundPressColor;
+    private int backgroundDisableColor;
     private int cornerRadius;
     private int cornerRadius_TL;
     private int cornerRadius_TR;
@@ -34,6 +37,7 @@ public class RoundViewDelegate {
     private int strokeColor;
     private int strokePressColor;
     private int textPressColor;
+    private int textDisableColor;
     private boolean isRadiusHalfHeight;
     private boolean isWidthHeightEqual;
     private boolean isRippleEnable;
@@ -49,11 +53,13 @@ public class RoundViewDelegate {
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.RoundTextView);
         backgroundColor = ta.getColor(R.styleable.RoundTextView_rv_backgroundColor, Color.TRANSPARENT);
         backgroundPressColor = ta.getColor(R.styleable.RoundTextView_rv_backgroundPressColor, Integer.MAX_VALUE);
+        backgroundDisableColor = ta.getColor(R.styleable.RoundTextView_rv_backgroundDisableColor, Integer.MAX_VALUE);
         cornerRadius = ta.getDimensionPixelSize(R.styleable.RoundTextView_rv_cornerRadius, 0);
         strokeWidth = ta.getDimensionPixelSize(R.styleable.RoundTextView_rv_strokeWidth, 0);
         strokeColor = ta.getColor(R.styleable.RoundTextView_rv_strokeColor, Color.TRANSPARENT);
         strokePressColor = ta.getColor(R.styleable.RoundTextView_rv_strokePressColor, Integer.MAX_VALUE);
         textPressColor = ta.getColor(R.styleable.RoundTextView_rv_textPressColor, Integer.MAX_VALUE);
+        textDisableColor = ta.getColor(R.styleable.RoundTextView_rv_textDisableColor, Integer.MAX_VALUE);
         isRadiusHalfHeight = ta.getBoolean(R.styleable.RoundTextView_rv_isRadiusHalfHeight, false);
         isWidthHeightEqual = ta.getBoolean(R.styleable.RoundTextView_rv_isWidthHeightEqual, false);
         cornerRadius_TL = ta.getDimensionPixelSize(R.styleable.RoundTextView_rv_cornerRadius_TL, 0);
@@ -192,40 +198,72 @@ public class RoundViewDelegate {
         return (int) (sp * scale + 0.5f);
     }
 
-    private void setDrawable(GradientDrawable gd, int color, int strokeColor) {
-        gd.setColor(color);
-
-        if (cornerRadius_TL > 0 || cornerRadius_TR > 0 || cornerRadius_BR > 0 || cornerRadius_BL > 0) {
-            /**The corners are ordered top-left, top-right, bottom-right, bottom-left*/
-            radiusArr[0] = cornerRadius_TL;
-            radiusArr[1] = cornerRadius_TL;
-            radiusArr[2] = cornerRadius_TR;
-            radiusArr[3] = cornerRadius_TR;
-            radiusArr[4] = cornerRadius_BR;
-            radiusArr[5] = cornerRadius_BR;
-            radiusArr[6] = cornerRadius_BL;
-            radiusArr[7] = cornerRadius_BL;
-            gd.setCornerRadii(radiusArr);
-        } else {
-            gd.setCornerRadius(cornerRadius);
+    public void setBgSelector() {
+        if (strokePressColor == Integer.MAX_VALUE) {
+            strokePressColor = strokeColor;
         }
 
-        gd.setStroke(strokeWidth, strokeColor);
-    }
+        gd_background = new GradientDrawable();
+        gd_background_press = new GradientDrawable();
+        gd_background_disable = new GradientDrawable();
 
-    public void setBgSelector() {
+        try {
+            Drawable drawable = view.getBackground();//如果是button的话可能是rippleDrawable
+            if (drawable != null && drawable instanceof ColorDrawable) {
+                backgroundColor = ((ColorDrawable) drawable).getColor();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (backgroundPressColor == Integer.MAX_VALUE) {
+            backgroundPressColor = backgroundColor;
+        }
+        fillGradientDrawable(gd_background, backgroundColor, strokeColor);
         StateListDrawable bg = new StateListDrawable();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isRippleEnable) {
-            setDrawable(gd_background, backgroundColor, strokeColor);
-            RippleDrawable rippleDrawable = new RippleDrawable(
-                    getPressedColorSelector(backgroundColor, backgroundPressColor), gd_background, null);
+            int[][] stateList = new int[][]{
+                    new int[]{android.R.attr.state_pressed},
+                    new int[]{android.R.attr.state_focused},
+                    new int[]{android.R.attr.state_activated},
+                    new int[]{}
+            };
+
+            //深蓝
+            int normalColor = Color.parseColor("#303F9F");
+            //玫瑰红
+            int pressedColor = Color.parseColor("#FF4081");
+            int[] stateColorList = new int[]{
+                    pressedColor,
+                    pressedColor,
+                    pressedColor,
+                    normalColor
+            };
+            ColorStateList colorStateList = new ColorStateList(stateList, stateColorList);
+
+            float[] outRadius = new float[]{
+                    radiusArr[0], radiusArr[1],
+                    radiusArr[2], radiusArr[3],
+                    radiusArr[4], radiusArr[5],
+                    radiusArr[6], radiusArr[7]};
+            RoundRectShape roundRectShape = new RoundRectShape(outRadius, null, null);
+            ShapeDrawable maskDrawable = new ShapeDrawable();
+            maskDrawable.setShape(roundRectShape);
+            maskDrawable.getPaint().setColor(Color.parseColor("#000000"));
+            maskDrawable.getPaint().setStyle(Paint.Style.FILL);
+
+            //contentDrawable实际是默认初始化时展示的；maskDrawable 控制了rippleDrawable的范围
+            RippleDrawable rippleDrawable = new RippleDrawable(colorStateList, gd_background, maskDrawable);
             view.setBackground(rippleDrawable);
         } else {
-            setDrawable(gd_background, backgroundColor, strokeColor);
-            bg.addState(new int[]{-android.R.attr.state_pressed}, gd_background);
+
+            //注意该处的顺序，只要有一个状态与之相配，背景就会被换掉,不要把大范围放在前面
+            bg.addState(new int[]{-android.R.attr.state_pressed, android.R.attr.state_enabled}, gd_background);
+
+            //add press state
             if (backgroundPressColor != Integer.MAX_VALUE || strokePressColor != Integer.MAX_VALUE) {
-                setDrawable(gd_background_press, backgroundPressColor == Integer.MAX_VALUE ? backgroundColor : backgroundPressColor,
+                fillGradientDrawable(gd_background_press,
+                        backgroundPressColor == Integer.MAX_VALUE ? backgroundColor : backgroundPressColor,
                         strokePressColor == Integer.MAX_VALUE ? strokeColor : strokePressColor);
                 bg.addState(new int[]{android.R.attr.state_pressed}, gd_background_press);
             }
@@ -238,15 +276,35 @@ public class RoundViewDelegate {
             }
         }
 
+        //add disable state
+        if (backgroundDisableColor != Integer.MAX_VALUE) {
+            fillGradientDrawable(gd_background_disable,
+                    backgroundDisableColor,
+                    strokeColor);
+            bg.addState(new int[]{-android.R.attr.state_enabled}, gd_background_disable);
+        }
+
         if (view instanceof TextView) {
-            if (textPressColor != Integer.MAX_VALUE) {
-                ColorStateList textColors = ((TextView) view).getTextColors();
-//              Log.d("AAA", textColors.getColorForState(new int[]{-android.R.attr.state_pressed}, -1) + "");
-                ColorStateList colorStateList = new ColorStateList(
-                        new int[][]{new int[]{-android.R.attr.state_pressed}, new int[]{android.R.attr.state_pressed}},
-                        new int[]{textColors.getDefaultColor(), textPressColor});
-                ((TextView) view).setTextColor(colorStateList);
-            }
+
+            ColorStateList textColors = ((TextView) view).getTextColors();
+            int defaultColor = textColors.getDefaultColor();
+
+            textDisableColor = textDisableColor == Integer.MAX_VALUE ? defaultColor : textDisableColor;
+            textPressColor = textPressColor == Integer.MAX_VALUE ? defaultColor : textPressColor;
+
+            ColorStateList colorStateList = new ColorStateList(
+                    new int[][]{
+                            new int[]{-android.R.attr.state_enabled},
+                            new int[]{-android.R.attr.state_pressed},
+                            new int[]{android.R.attr.state_pressed}
+                    },
+                    new int[]{textDisableColor,
+                            defaultColor,
+                            textPressColor}
+            );
+
+            ((TextView) view).setTextColor(colorStateList);
+
         }
     }
 
@@ -266,5 +324,46 @@ public class RoundViewDelegate {
                         normalColor
                 }
         );
+    }
+
+    private void fillGradientDrawable(GradientDrawable gd, int color, int strokeColor) {
+        if (color != Integer.MAX_VALUE) {
+            gd.setColor(color);
+        }
+
+        if (cornerRadius_TL > 0 || cornerRadius_TR > 0 || cornerRadius_BR > 0 || cornerRadius_BL > 0) {
+            /**The corners are ordered top-left, top-right, bottom-right, bottom-left*/
+            radiusArr[0] = cornerRadius_TL;
+            radiusArr[1] = cornerRadius_TL;
+            radiusArr[2] = cornerRadius_TR;
+            radiusArr[3] = cornerRadius_TR;
+            radiusArr[4] = cornerRadius_BR;
+            radiusArr[5] = cornerRadius_BR;
+            radiusArr[6] = cornerRadius_BL;
+            radiusArr[7] = cornerRadius_BL;
+            gd.setCornerRadii(radiusArr);
+        } else if (cornerRadius > 0) {
+            radiusArr[0] = cornerRadius;
+            radiusArr[1] = cornerRadius;
+            radiusArr[2] = cornerRadius;
+            radiusArr[3] = cornerRadius;
+            radiusArr[4] = cornerRadius;
+            radiusArr[5] = cornerRadius;
+            radiusArr[6] = cornerRadius;
+            radiusArr[7] = cornerRadius;
+            gd.setCornerRadius(cornerRadius);
+        } else if (isRadiusHalfHeight) {
+            radiusArr[0] = Float.MAX_VALUE;
+            radiusArr[1] = Float.MAX_VALUE;
+            radiusArr[2] = Float.MAX_VALUE;
+            radiusArr[3] = Float.MAX_VALUE;
+            radiusArr[4] = Float.MAX_VALUE;
+            radiusArr[5] = Float.MAX_VALUE;
+            radiusArr[6] = Float.MAX_VALUE;
+            radiusArr[7] = Float.MAX_VALUE;
+            gd.setCornerRadius(Float.MAX_VALUE);
+        }
+
+        gd.setStroke(strokeWidth, strokeColor);
     }
 }
