@@ -11,7 +11,7 @@ import com.flyco.roundview.RoundLinearLayout;
 import com.flyco.roundview.RoundTextView;
 import com.flyco.roundview.RoundViewDelegate;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class StyledViewActivity extends AppCompatActivity implements View.OnClickListener {
     /**
      * TextView Default
      */
@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_styled_view);
         initView();
     }
 
