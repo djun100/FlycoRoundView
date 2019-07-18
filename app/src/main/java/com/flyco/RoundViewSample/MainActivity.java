@@ -1,55 +1,83 @@
 package com.flyco.RoundViewSample;
 
-import android.content.Context;
 import android.graphics.Color;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
 import com.flyco.roundview.RoundFrameLayout;
+import com.flyco.roundview.RoundLinearLayout;
 import com.flyco.roundview.RoundTextView;
 import com.flyco.roundview.RoundViewDelegate;
 
-public class MainActivity extends AppCompatActivity {
-    private Context context = this;
-    private RoundFrameLayout fl;
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    /**
+     * TextView Default
+     */
+    private RoundTextView mRtv1;
+    /**
+     * Radius Half Height
+     */
+    private RoundTextView mRtv2;
+    /**
+     * TextView Radius 10dpTextView Radius 10dp
+     */
+    private RoundTextView mRtv3;
+    /**
+     * Radius TopRight
+     */
+    private RoundTextView mTvRt;
+    private RoundFrameLayout mFl;
+    private RoundLinearLayout mLl;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        findViewById(R.id.rtv_1).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(context, "Click--->RoundTextView_1", Toast.LENGTH_SHORT).show();
-            }
-        });
+        initView();
+    }
 
-        final RoundTextView rtv_2 = (RoundTextView) findViewById(R.id.rtv_2);
-        rtv_2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                rtv_2.setEnabled(false);
-                Toast.makeText(context, "LongClick--->RoundTextView_2", Toast.LENGTH_SHORT).show();
-            }
-        });
+    private void initView() {
+        mRtv1 = findViewById(R.id.rtv_1);
+        mRtv1.setOnClickListener(this);
+        mRtv2 = findViewById(R.id.rtv_2);
+        mRtv2.setOnClickListener(this);
+        mRtv3 = findViewById(R.id.rtv_3);
+        mRtv3.setOnClickListener(this);
+        mTvRt = findViewById(R.id.tvRt);
+        mTvRt.setOnClickListener(this);
+        mFl = findViewById(R.id.fl);
+        mFl.setOnClickListener(this);
+        mLl = findViewById(R.id.ll);
+        mLl.setOnClickListener(this);
+    }
 
-        final RoundTextView rtv_3 = (RoundTextView) findViewById(R.id.rtv_3);
-        rtv_3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                RoundViewDelegate delegate = rtv_3.getDelegate();
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            default:
+                break;
+            case R.id.rtv_1:
+                Toast.makeText(this, "Click--->RoundTextView_1", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.rtv_2:
+                //                rtv_2.setEnabled(false);
+                Toast.makeText(this, "LongClick--->RoundTextView_2", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.rtv_3:
+                RoundViewDelegate delegate = mRtv3.getDelegate();
                 delegate.setBackgroundColor(
                         delegate.getBackgroundColor() == Color.parseColor("#ffffff")
                                 ? Color.parseColor("#F6CE59") : Color.parseColor("#ffffff"));
-            }
-        });
-        fl= (RoundFrameLayout) findViewById(R.id.fl);
-        fl.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-            }
-        });
+                break;
+            case R.id.tvRt:
+                break;
+            case R.id.fl:
+                break;
+            case R.id.ll:
+                break;
+        }
     }
 }

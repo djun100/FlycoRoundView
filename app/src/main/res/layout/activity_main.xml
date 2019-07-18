@@ -4,6 +4,7 @@
     xmlns:rv="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/white"
     android:scrollbars="none">
 
     <LinearLayout
@@ -45,8 +46,8 @@
                 android:paddingTop="10dp"
                 android:text="Radius Half Height"
                 android:textColor="#03A9F4"
-                rv:rv_backgroundColor="@android:color/holo_orange_light"
-                rv:rv_backgroundPressColor="#03A9F4"
+                rv:rv_backgroundColor="#ffbb33"
+                rv:rv_backgroundPressColor="@android:color/holo_orange_light"
                 rv:rv_backgroundDisableColor="@android:color/darker_gray"
                 rv:rv_isRadiusHalfHeight="true"
                 rv:rv_isRippleEnable="true"
@@ -54,7 +55,7 @@
                 rv:rv_strokePressColor="#6D8FB0"
                 rv:rv_strokeWidth="1dp"
                 rv:rv_textDisableColor="@android:color/black"
-                rv:rv_textPressColor="#ffffff"/>
+                rv:rv_textPressColor="@android:color/darker_gray"/>
         </LinearLayout>
 
 
@@ -96,6 +97,7 @@
                 rv:rv_cornerRadius_TL="10dp"/>
 
             <com.flyco.roundview.RoundTextView
+                android:id="@+id/tvRt"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="2.5dp"
@@ -160,6 +162,7 @@
         </com.flyco.roundview.RoundFrameLayout>
 
         <com.flyco.roundview.RoundLinearLayout
+            android:id="@+id/ll"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
@@ -171,6 +174,7 @@
             android:paddingTop="10dp"
             android:textColor="#ffffff"
             rv:rv_backgroundColor="#E45171"
+            rv:rv_isRippleEnable="false"
             rv:rv_cornerRadius="5dp">
 
             <ImageView

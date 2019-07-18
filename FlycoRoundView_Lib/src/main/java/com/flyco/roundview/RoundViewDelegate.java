@@ -1,18 +1,14 @@
 package com.flyco.roundview;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
-import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.StateListDrawable;
-import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
@@ -42,7 +38,6 @@ public class RoundViewDelegate {
     private boolean isWidthHeightEqual;
     private boolean isRippleEnable;
     private float[] radiusArr = new float[8];
-
     public RoundViewDelegate(View view, Context context, AttributeSet attrs) {
         this.view = view;
         this.context = context;
@@ -193,12 +188,10 @@ public class RoundViewDelegate {
         return (int) (dp * scale + 0.5f);
     }
 
-    protected int sp2px(float sp) {
-        final float scale = this.context.getResources().getDisplayMetrics().scaledDensity;
-        return (int) (sp * scale + 0.5f);
-    }
-
     public void setBgSelector() {
+        if (backgroundPressColor == Integer.MAX_VALUE) {
+            backgroundPressColor = UtilColor.colorLightDown(backgroundColor);
+        }
         if (strokePressColor == Integer.MAX_VALUE) {
             strokePressColor = strokeColor;
         }
@@ -215,11 +208,22 @@ public class RoundViewDelegate {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (backgroundPressColor == Integer.MAX_VALUE) {
-            backgroundPressColor = backgroundColor;
-        }
+
         fillGradientDrawable(gd_background, backgroundColor, strokeColor);
-        StateListDrawable bg = new StateListDrawable();
+        StateListDrawable listDrawable = new StateListDrawable();
+
+        //注意该处的顺序，只要有一个状态与之相配，背景就会被换掉,不要把大范围放在前面
+        listDrawable.addState(new int[]{-android.R.attr.state_pressed, android.R.attr.state_enabled}, gd_background);
+
+        //add press state
+        fillGradientDrawable(gd_background_press, backgroundPressColor, strokePressColor);
+        listDrawable.addState(new int[]{android.R.attr.state_pressed, android.R.attr.state_enabled}, gd_background_press);
+
+        //add disable state
+        if (backgroundDisableColor != Integer.MAX_VALUE) {
+            fillGradientDrawable(gd_background_disable, backgroundDisableColor, strokeColor);
+            listDrawable.addState(new int[]{-android.R.attr.state_enabled}, gd_background_disable);
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isRippleEnable) {
             int[][] stateList = new int[][]{
@@ -229,59 +233,26 @@ public class RoundViewDelegate {
                     new int[]{}
             };
 
-            //深蓝
-            int normalColor = Color.parseColor("#303F9F");
-            //玫瑰红
-            int pressedColor = Color.parseColor("#FF4081");
+            //ripple color，要明显区别于backgroundColor
+            int rippleColor = Color.parseColor("#80000000");
+
             int[] stateColorList = new int[]{
-                    pressedColor,
-                    pressedColor,
-                    pressedColor,
-                    normalColor
+                    backgroundPressColor,
+                    backgroundPressColor,
+                    backgroundPressColor,
+                    rippleColor
             };
             ColorStateList colorStateList = new ColorStateList(stateList, stateColorList);
 
-            float[] outRadius = new float[]{
-                    radiusArr[0], radiusArr[1],
-                    radiusArr[2], radiusArr[3],
-                    radiusArr[4], radiusArr[5],
-                    radiusArr[6], radiusArr[7]};
-            RoundRectShape roundRectShape = new RoundRectShape(outRadius, null, null);
-            ShapeDrawable maskDrawable = new ShapeDrawable();
-            maskDrawable.setShape(roundRectShape);
-            maskDrawable.getPaint().setColor(Color.parseColor("#000000"));
-            maskDrawable.getPaint().setStyle(Paint.Style.FILL);
-
-            //contentDrawable实际是默认初始化时展示的；maskDrawable 控制了rippleDrawable的范围
-            RippleDrawable rippleDrawable = new RippleDrawable(colorStateList, gd_background, maskDrawable);
+            RippleDrawable rippleDrawable = new RippleDrawable(colorStateList, listDrawable, null);
             view.setBackground(rippleDrawable);
         } else {
-
-            //注意该处的顺序，只要有一个状态与之相配，背景就会被换掉,不要把大范围放在前面
-            bg.addState(new int[]{-android.R.attr.state_pressed, android.R.attr.state_enabled}, gd_background);
-
-            //add press state
-            if (backgroundPressColor != Integer.MAX_VALUE || strokePressColor != Integer.MAX_VALUE) {
-                fillGradientDrawable(gd_background_press,
-                        backgroundPressColor == Integer.MAX_VALUE ? backgroundColor : backgroundPressColor,
-                        strokePressColor == Integer.MAX_VALUE ? strokeColor : strokePressColor);
-                bg.addState(new int[]{android.R.attr.state_pressed}, gd_background_press);
-            }
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {//16
-                view.setBackground(bg);
+                view.setBackground(listDrawable);
             } else {
                 //noinspection deprecation
-                view.setBackgroundDrawable(bg);
+                view.setBackgroundDrawable(listDrawable);
             }
-        }
-
-        //add disable state
-        if (backgroundDisableColor != Integer.MAX_VALUE) {
-            fillGradientDrawable(gd_background_disable,
-                    backgroundDisableColor,
-                    strokeColor);
-            bg.addState(new int[]{-android.R.attr.state_enabled}, gd_background_disable);
         }
 
         if (view instanceof TextView) {
@@ -306,24 +277,6 @@ public class RoundViewDelegate {
             ((TextView) view).setTextColor(colorStateList);
 
         }
-    }
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private ColorStateList getPressedColorSelector(int normalColor, int pressedColor) {
-        return new ColorStateList(
-                new int[][]{
-                        new int[]{android.R.attr.state_pressed},
-                        new int[]{android.R.attr.state_focused},
-                        new int[]{android.R.attr.state_activated},
-                        new int[]{}
-                },
-                new int[]{
-                        pressedColor,
-                        pressedColor,
-                        pressedColor,
-                        normalColor
-                }
-        );
     }
 
     private void fillGradientDrawable(GradientDrawable gd, int color, int strokeColor) {
