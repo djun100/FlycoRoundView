@@ -7,7 +7,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
-/** 用于需要圆角矩形框背景的TextView的情况,减少直接使用TextView时引入的shape资源文件 */
+/**
+ * 用于需要圆角矩形框背景的TextView的情况,减少直接使用TextView时引入的shape资源文件
+ */
 public class RoundTextView extends TextView {
     private RoundViewDelegate delegate;
 
@@ -24,21 +26,20 @@ public class RoundTextView extends TextView {
         delegate = new RoundViewDelegate(this, context, attrs);
     }
 
-    /** use delegate to set attr */
+    /**
+     * use delegate to set attr
+     */
     public RoundViewDelegate getDelegate() {
         return delegate;
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (delegate.isWidthHeightEqual() && getWidth() > 0 && getHeight() > 0) {
-            int max = Math.max(getWidth(), getHeight());
-            int measureSpec = MeasureSpec.makeMeasureSpec(max, MeasureSpec.EXACTLY);
-            super.onMeasure(measureSpec, measureSpec);
-            return;
-        }
-
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (delegate.isWidthHeightEqual() && getMeasuredWidth() > 0 && getMeasuredHeight() > 0) {
+            int max = Math.max(getMeasuredWidth(), getMeasuredHeight());
+            setMeasuredDimension(max, max);
+        }
     }
 
     @Override

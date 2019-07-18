@@ -28,14 +28,10 @@ public class RoundRelativeLayout extends RelativeLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (delegate.isWidthHeightEqual() && getWidth() > 0 && getHeight() > 0) {
-            int max = Math.max(getWidth(), getHeight());
-            int measureSpec = MeasureSpec.makeMeasureSpec(max, MeasureSpec.EXACTLY);
-            super.onMeasure(measureSpec, measureSpec);
-            return;
+        if (delegate.isWidthHeightEqual() && getMeasuredWidth() > 0 && getMeasuredHeight() > 0) {
+            int max = Math.max(getMeasuredWidth(), getMeasuredHeight());
+            setMeasuredDimension(max, max);
         }
-
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
